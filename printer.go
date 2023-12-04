@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"runtime"
 	"strings"
 
 	"github.com/rs/zerolog"
@@ -23,12 +24,12 @@ func main() {
 	ipMacMap, ipRangeMap, _ := runARP()
 	// Print the IP and MAC addresses
 	for ip, mac := range ipMacMap {
-		log.Info().Msgf("IP: %s, MAC: %s\n", ip, mac)
+		log.Info().Msgf("IP: %s, MAC: %s", ip, mac)
 	}
 
 	// Print the IP ranges
 	for ipRange := range ipRangeMap {
-		log.Info().Msgf("IP Range: %s\n", ipRange)
+		log.Info().Msgf("IP Range: %s", ipRange)
 	}
 
 	// Now you can use these IP addresses for further scanning with Nmap
@@ -64,9 +65,14 @@ func main() {
 						sendRequest([]string{mac}, []string{ipFound})
 					} else {
 						nmapEcho(ipFound)
-						pingIp(ipFound)
+						if runtime.GOOS == "darwin" {
+							pingIpMac(ipFound)
+						} else {
+							pingIpWindows(ipFound)
+						}
 						log.Debug().Msgf("printer ip not found doing arp again!")
 						ipMacMap, ipRangeMap, _ = runARP()
+
 						if mac, ok := ipMacMap[ipFound]; ok {
 							log.Info().Msgf("Printer IP Mac: %s --> %s", ipFound, mac)
 							sendRequest([]string{mac}, []string{ipFound})
@@ -134,7 +140,9 @@ func runARP() (map[string]string, map[string]bool, error) {
 	ipMacMap := make(map[string]string)
 	ipRangeMap := make(map[string]bool)
 	for _, line := range strings.Split(out.String(), "\n") {
-		fmt.Println("arp line", line)
+		// if strings.Index(line, "192.168.9.175") > 0 {
+		// 	log.Debug().Msgf("arp line %s", line)
+		// }
 
 		ipRegex := regexp.MustCompile(`\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b`)
 
@@ -144,8 +152,7 @@ func runARP() (map[string]string, map[string]bool, error) {
 			networkIPRange := fmt.Sprintf("%s.%s.%s.0/24", ipParts[0], ipParts[1], ipParts[2])
 			ipRangeMap[networkIPRange] = true
 
-			macRegex := regexp.MustCompile(`\b([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})\b`)
-
+			macRegex := regexp.MustCompile(`\b([0-9A-Fa-f]{1,2}[:-]){5}([0-9A-Fa-f]{2})\b`)
 			matches := macRegex.FindAllString(line, -1)
 			for _, mac := range matches {
 				ipMacMap[ip] = mac
@@ -232,7 +239,20 @@ func nmapEcho(ip string) {
 	fmt.Println(string(out))
 }
 
-func pingIp(ip string) error {
+func pingIpMac(ip string) error {
+	cmd := exec.Command("ping", "-t", "100", "-c", "1", ip)
+
+	out, err := cmd.Output()
+	if err != nil {
+		log.Error().Err(err).Msgf("error with ping")
+		return err
+	} else {
+		fmt.Println(string(out))
+	}
+	return nil
+}
+
+func pingIpWindows(ip string) error {
 	cmd := exec.Command("ping", "-n", "1", "-t", ip)
 
 	out, err := cmd.Output()
