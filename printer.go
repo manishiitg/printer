@@ -134,7 +134,7 @@ func runARP() (map[string]string, map[string]bool, error) {
 	ipMacMap := make(map[string]string)
 	ipRangeMap := make(map[string]bool)
 	for _, line := range strings.Split(out.String(), "\n") {
-		fmt.Println("line", line)
+		fmt.Println("arp line", line)
 
 		ipRegex := regexp.MustCompile(`\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b`)
 
@@ -233,7 +233,7 @@ func nmapEcho(ip string) {
 }
 
 func pingIp(ip string) error {
-	cmd := exec.Command("ping", "-n", "1", "-w", "200", ip)
+	cmd := exec.Command("ping", "-n", "1", "-t", ip)
 
 	out, err := cmd.Output()
 	if err != nil {
