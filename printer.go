@@ -127,23 +127,39 @@ func runARP() (map[string]string, map[string]bool, error) {
 	}
 
 	// Regular expression to match IP and MAC addresses in arp output
-	ipMacRegex := regexp.MustCompile(`^([0-9.]+)\s+([0-9A-Fa-f:-]+)`)
+	// ipMacRegex := regexp.MustCompile(`\(([\d.]+)\) at ([\w:]+)`)
 
+	// Parse the output to find IP and MAC addresses
 	ipMacMap := make(map[string]string)
 	ipRangeMap := make(map[string]bool)
+	for _, line := range strings.Split(out.String(), "\n") {
+		fmt.Println("line", line)
 
-	lines := strings.Split(out.String(), "\n")
-	for _, line := range lines {
-		fmt.Println("line")
-		if ipMacMatches := ipMacRegex.FindStringSubmatch(line); ipMacMatches != nil {
-			ip := ipMacMatches[1]
-			mac := ipMacMatches[2]
-			ipMacMap[ip] = mac
+		ipRegex := regexp.MustCompile(`\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b`)
 
+		matches := ipRegex.FindAllString(line, -1)
+		for _, ip := range matches {
 			ipParts := strings.Split(ip, ".")
 			networkIPRange := fmt.Sprintf("%s.%s.%s.0/24", ipParts[0], ipParts[1], ipParts[2])
 			ipRangeMap[networkIPRange] = true
+
+			macRegex := regexp.MustCompile(`\b([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})\b`)
+
+			matches := macRegex.FindAllString(line, -1)
+			for _, mac := range matches {
+				ipMacMap[ip] = mac
+				break
+			}
+
+			break
 		}
+
+		// if ipMacMatches := ipMacRegex.FindStringSubmatch(line); ipMacMatches != nil {
+		// 	ip := ipMacMatches[1]
+		// 	mac := ipMacMatches[2]
+		// 	ipMacMap[ip] = mac
+
+		// }
 	}
 	return ipMacMap, ipRangeMap, nil
 }
