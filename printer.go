@@ -81,7 +81,7 @@ func main() {
 						}
 					}
 				} else {
-					log.Debug().Msgf("ip found but not printer %s", ipFound)
+					// log.Debug().Msgf("ip found but not printer %s", ipFound)
 				}
 
 			}
