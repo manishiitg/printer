@@ -242,4 +242,5 @@ func pingIp(ip string) error {
 	} else {
 		fmt.Println(string(out))
 	}
+	return nil
 }
