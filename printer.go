@@ -64,6 +64,7 @@ func main() {
 						sendRequest([]string{mac}, []string{ipFound})
 					} else {
 						nmapEcho(ipFound)
+						pingIp(ipFound)
 						log.Debug().Msgf("printer ip not found doing arp again!")
 						ipMacMap, ipRangeMap, _ = runARP()
 						if mac, ok := ipMacMap[ipFound]; ok {
@@ -229,4 +230,16 @@ func nmapEcho(ip string) {
 		return
 	}
 	fmt.Println(string(out))
+}
+
+func pingIp(ip string) error {
+	cmd := exec.Command("ping", "-n", "1", "-w", "200", ip)
+
+	out, err := cmd.Output()
+	if err != nil {
+		log.Error().Err(err).Msgf("error with ping")
+		return err
+	} else {
+		fmt.Println(string(out))
+	}
 }
