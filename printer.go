@@ -64,7 +64,7 @@ func main() {
 						log.Info().Msgf("Printer IP Mac: %s --> %s", ipFound, mac)
 						sendRequest([]string{mac}, []string{ipFound})
 					} else {
-						nmapEcho(ipFound)
+						// nmapEcho(ipFound)
 						if runtime.GOOS == "darwin" {
 							pingIpMac(ipFound)
 						} else {
