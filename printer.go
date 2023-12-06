@@ -253,7 +253,7 @@ func pingIpMac(ip string) error {
 }
 
 func pingIpWindows(ip string) error {
-	cmd := exec.Command("ping", "-n", "1", "-t", ip)
+	cmd := exec.Command("ping", "-n", "1", ip)
 
 	out, err := cmd.Output()
 	if err != nil {
