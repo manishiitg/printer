@@ -200,7 +200,7 @@ type RequestData struct {
 }
 
 func sendRequest(macAddress []string, ipAddress []string) error {
-	url := "https://wms.staging-dev.citymall.dev/wms-app/commons/mac-ip-address-mapping"
+	url := "https://wms.citymall.live/wms-app/commons/mac-ip-address-mapping"
 	data := RequestData{
 		MacAddress: macAddress,
 		IPAddress:  ipAddress,
